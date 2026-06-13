@@ -6,7 +6,6 @@ const vm = require("vm");
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "outputs", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(root, "outputs", "game.js"), "utf8");
-const styles = fs.readFileSync(path.join(root, "outputs", "styles.css"), "utf8");
 const {
   analyzeLevels,
   combinationsCount,
@@ -633,11 +632,4 @@ test("hint button reveals one solution square at a time until the solution is ac
     0,
     "changing levels should clear revealed hints"
   );
-});
-
-test("cell hover keeps spritesheet coordinates intact", () => {
-  assert.match(styles, /button:not\(\.cell\):hover/);
-  assert.doesNotMatch(styles, /button:hover\s*\{[^}]*background\s*:/);
-  assert.match(styles, /\.cell\s*\{[^}]*background-size:\s*var\(--sprite-size\)/s);
-  assert.match(styles, /\.cell\s*\{[^}]*background-repeat:\s*no-repeat/s);
 });

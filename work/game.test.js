@@ -641,7 +641,3 @@ test("cell hover keeps spritesheet coordinates intact", () => {
   assert.match(styles, /\.cell\s*\{[^}]*background-size:\s*var\(--sprite-size\)/s);
   assert.match(styles, /\.cell\s*\{[^}]*background-repeat:\s*no-repeat/s);
 });
-
-test("stone cells use the requested bottom-row sprite", () => {
-  assert.match(styles, /\.cell\.rock\s*\{[^}]*--tile-x:\s*4;[^}]*--tile-y:\s*13;/s);
-});

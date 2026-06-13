@@ -1,19 +1,17 @@
 :root {
   color-scheme: light;
-  --ink: #172820;
-  --muted: #526a58;
-  --paper: #f6f1d2;
-  --panel: #c8e5a3;
-  --line: #314d3a;
-  --leaf: #2f9b55;
-  --leaf-dark: #187044;
-  --sky: #69b7c7;
-  --berry: #b73560;
-  --gold: #e3b842;
-  --stone: #667086;
-  --soil: #72523c;
-  --sprite: url("assets/grass-plus.png");
-  --sprite-size: 400px 224px;
+  --ink: #26312d;
+  --muted: #65736c;
+  --paper: #fffaf0;
+  --panel: #f7eddc;
+  --line: #d9c9ad;
+  --leaf: #3f9b6d;
+  --leaf-dark: #247453;
+  --sky: #7db6d9;
+  --berry: #cc4f73;
+  --gold: #e4ab3d;
+  --stone: #8c8f86;
+  --soil: #795c44;
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
@@ -26,22 +24,21 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    linear-gradient(45deg, rgba(23, 40, 32, .05) 25%, transparent 25% 75%, rgba(23, 40, 32, .05) 75%),
-    #bfe8ad;
-  background-size: 16px 16px;
-  image-rendering: pixelated;
+    radial-gradient(circle at 18% 12%, rgba(228, 171, 61, .28), transparent 22rem),
+    radial-gradient(circle at 88% 22%, rgba(125, 182, 217, .35), transparent 24rem),
+    linear-gradient(135deg, #eef6df 0%, #fff7e8 48%, #e8f4f1 100%);
 }
 
 button {
-  border: 2px solid #213a2c;
-  border-radius: 0;
+  border: 0;
+  border-radius: 8px;
   padding: .75rem 1rem;
   color: #fff;
   background: var(--leaf-dark);
   font: inherit;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 0 #0e4d31;
+  box-shadow: 0 4px 0 #1d5b43;
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
 
@@ -72,10 +69,10 @@ button:disabled {
 
 .play-area,
 .side-panel {
-  border: 4px solid #314d3a;
-  border-radius: 0;
-  background: rgba(246, 241, 210, .94);
-  box-shadow: 8px 8px 0 rgba(23, 40, 32, .22);
+  border: 2px solid rgba(121, 92, 68, .22);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, .86);
+  box-shadow: 0 18px 50px rgba(71, 54, 34, .14);
 }
 
 .play-area {
@@ -150,12 +147,14 @@ h2 {
   display: grid;
   aspect-ratio: 1;
   width: 100%;
-  padding: 8px;
-  gap: 2px;
-  border: 4px solid #72523c;
-  border-radius: 0;
-  background: #314d3a;
-  image-rendering: pixelated;
+  padding: 10px;
+  gap: 5px;
+  border: 3px solid #795c44;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, rgba(121, 92, 68, .12) 25%, transparent 25% 75%, rgba(121, 92, 68, .12) 75%),
+    var(--panel);
+  background-size: 26px 26px;
 }
 
 .cell {
@@ -163,15 +162,12 @@ h2 {
   min-width: 0;
   min-height: 0;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background-image: var(--sprite);
-  background-size: var(--sprite-size);
-  background-position: 0 0;
+  border: 1px solid rgba(121, 92, 68, .25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .48);
   box-shadow: none;
   cursor: default;
   overflow: hidden;
-  image-rendering: pixelated;
 }
 
 .cell:disabled {
@@ -179,23 +175,50 @@ h2 {
 }
 
 .cell.paintable {
-  background-image: var(--sprite);
-  background-position: -48px 0;
+  background: #dbeabf;
   cursor: pointer;
 }
 
 .cell.paintable:hover {
-  outline: 2px solid #f7dc62;
-  outline-offset: -2px;
+  outline: 3px solid rgba(228, 171, 61, .65);
+  outline-offset: -3px;
 }
 
 .cell.alive {
-  background-image: var(--sprite);
-  background-position: -64px -32px;
+  background:
+    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, .18) 10% 12%, transparent 12% 23%, rgba(36, 116, 83, .34) 23% 26%, transparent 26% 38%, rgba(255, 255, 255, .16) 38% 40%, transparent 40% 56%, rgba(36, 116, 83, .3) 56% 59%, transparent 59% 72%, rgba(255, 255, 255, .16) 72% 74%, transparent 74%),
+    linear-gradient(180deg, #7fcf75 0%, #3f9b6d 62%, #247453 100%);
+  box-shadow: inset 0 -7px 0 rgba(36, 116, 83, .26), inset 0 0 0 2px rgba(255, 255, 255, .28);
+}
+
+.cell.alive::before,
+.cell.alive::after {
+  content: "";
+  position: absolute;
+  bottom: 9%;
+  width: 16%;
+  height: 66%;
+  border-radius: 80% 80% 10% 10%;
+  background: rgba(230, 255, 210, .48);
+  transform-origin: bottom center;
+}
+
+.cell.alive::before {
+  left: 31%;
+  transform: rotate(-14deg);
+}
+
+.cell.alive::after {
+  right: 29%;
+  height: 58%;
+  transform: rotate(16deg);
 }
 
 .cell.alive.flower {
-  background-position: -16px -112px;
+  background:
+    radial-gradient(circle at 67% 24%, #fff1a4 0 7%, #cc4f73 8% 12%, transparent 13%),
+    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, .18) 10% 12%, transparent 12% 23%, rgba(36, 116, 83, .34) 23% 26%, transparent 26% 38%, rgba(255, 255, 255, .16) 38% 40%, transparent 40% 56%, rgba(36, 116, 83, .3) 56% 59%, transparent 59% 72%, rgba(255, 255, 255, .16) 72% 74%, transparent 74%),
+    linear-gradient(180deg, #7fcf75 0%, #3f9b6d 62%, #247453 100%);
 }
 
 .cell.new-growth {
@@ -205,35 +228,46 @@ h2 {
 .cell.new-growth::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 0;
-  background: rgba(247, 220, 98, .3);
+  inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 241, 164, .62), rgba(125, 182, 217, 0) 66%);
   animation: growthGlow 520ms ease-out both;
   pointer-events: none;
 }
 
 .cell.fading {
-  background-image: var(--sprite);
-  background-position: -336px -48px;
-  box-shadow: none;
+  background:
+    linear-gradient(90deg, transparent 0 16%, rgba(139, 111, 42, .24) 16% 19%, transparent 19% 36%, rgba(255, 255, 255, .14) 36% 38%, transparent 38% 61%, rgba(139, 111, 42, .26) 61% 64%, transparent 64%),
+    linear-gradient(180deg, #d8c05b 0%, #b99a43 58%, #8b6f2a 100%);
+  box-shadow: inset 0 -6px 0 rgba(139, 111, 42, .24);
   animation: grassYellow 620ms ease-out both;
 }
 
 .cell.fading::after {
-  content: none;
+  content: "";
+  position: absolute;
+  left: 42%;
+  bottom: 10%;
+  width: 16%;
+  height: 58%;
+  border-radius: 80% 80% 10% 10%;
+  background: rgba(255, 238, 156, .46);
+  transform-origin: bottom center;
+  animation: wiltBlade 620ms ease-out both;
 }
 
 .cell.hint {
-  background-image: var(--sprite);
-  background-position: -80px 0;
+  background:
+    repeating-linear-gradient(135deg, rgba(63, 155, 109, .22) 0 7px, rgba(255, 250, 240, .42) 7px 14px),
+    rgba(219, 234, 191, .46);
 }
 
 .cell.hint::before {
   content: "";
   position: absolute;
-  inset: 2px;
-  border: 2px dashed rgba(247, 220, 98, .75);
-  border-radius: 0;
+  inset: 20%;
+  border: 2px dashed rgba(36, 116, 83, .58);
+  border-radius: 50%;
 }
 
 .cell.solution-hint {
@@ -244,19 +278,15 @@ h2 {
 .cell.solution-hint::before {
   content: "";
   position: absolute;
-  inset: 4px;
-  border-radius: 0;
+  inset: 24%;
+  border-radius: 50%;
   background: rgba(204, 79, 115, .42);
   box-shadow: 0 0 0 5px rgba(255, 240, 223, .62);
 }
 
 .cell.target {
-  background-image:
-    radial-gradient(circle at 50% 50%, #fff2a3 0 18%, #e3b842 19% 34%, #a75a3b 35% 50%, transparent 51%),
-    var(--sprite);
-  background-size: auto, var(--sprite-size);
-  background-position: center, -48px 0;
-  box-shadow: inset 0 0 0 2px #a75a3b;
+  background: radial-gradient(circle, #fff1a4 0 22%, #e4ab3d 23% 45%, #b86d55 46%);
+  box-shadow: 0 0 16px rgba(228, 171, 61, .6);
 }
 
 .cell.target.alive {
@@ -264,25 +294,30 @@ h2 {
 }
 
 .cell.rock {
-  background-image: var(--sprite);
-  background-position: -144px -160px;
+  background: linear-gradient(135deg, #a6a89d, #72776e);
 }
 
 .cell.moving-rock {
-  background-image: var(--sprite);
-  background-position: -176px -160px;
-  box-shadow: inset 0 0 0 2px rgba(105, 183, 199, .55);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .2), transparent 35%),
+    linear-gradient(135deg, #7f8a82, #4f5d56);
+  box-shadow: inset 0 0 0 2px rgba(255, 250, 240, .22), 0 0 0 2px rgba(125, 182, 217, .3);
 }
 
 .cell.moving-rock::before {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 28% 18%;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, .34);
 }
 
 .cell.next-rock {
-  background-image: var(--sprite);
-  background-position: -16px -16px;
-  outline: 2px dashed rgba(79, 93, 86, .72);
-  outline-offset: -3px;
+  background:
+    repeating-linear-gradient(135deg, rgba(127, 138, 130, .22) 0 5px, rgba(255, 250, 240, .24) 5px 10px),
+    rgba(236, 242, 233, .62);
+  outline: 2px dashed rgba(79, 93, 86, .52);
+  outline-offset: -5px;
 }
 
 .neighbor-count {
@@ -296,9 +331,9 @@ h2 {
   height: 1.15em;
   padding: 0 .18em;
   border: 1px solid rgba(38, 49, 45, .2);
-  border-radius: 0;
+  border-radius: 999px;
   color: var(--ink);
-  background: #f6f1d2;
+  background: rgba(255, 250, 240, .86);
   font-size: clamp(.46rem, 1.2vw, .72rem);
   font-weight: 900;
   line-height: 1;

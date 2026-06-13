@@ -45,11 +45,11 @@ button {
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
 
-button:hover {
+button:not(.cell):hover {
   background: #2f8660;
 }
 
-button:active {
+button:not(.cell):active {
   transform: translateY(3px);
   box-shadow: 0 1px 0 #1d5b43;
 }
@@ -160,7 +160,7 @@ h2 {
 
 .cell {
   position: relative;
-  --tile-x: 0;
+  --tile-x: 22;
   --tile-y: 0;
   min-width: 0;
   min-height: 0;
@@ -170,6 +170,7 @@ h2 {
   background-image: var(--sprite);
   background-size: var(--sprite-size);
   background-position: calc(var(--tile-x) * 100% / 24) calc(var(--tile-y) * 100% / 13);
+  background-repeat: no-repeat;
   box-shadow: none;
   cursor: default;
   overflow: hidden;

@@ -273,8 +273,8 @@ h2 {
 
 .cell.rock {
   background-image: var(--sprite);
-  --tile-x: 9;
-  --tile-y: 10;
+  --tile-x: 4;
+  --tile-y: 13;
 }
 
 .cell.moving-rock {

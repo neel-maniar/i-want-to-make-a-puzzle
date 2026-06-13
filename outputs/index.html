@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sproutlight Puzzle</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" aria-label="Sproutlight Puzzle">
+    <section class="play-area">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Sproutlight Puzzle</p>
+          <h1 id="levelTitle">Meadow Primer</h1>
+        </div>
+        <div class="level-controls" aria-label="Level controls">
+          <button id="prevLevel" type="button" aria-label="Previous level">&lsaquo;</button>
+          <span id="levelCounter">1 / 5</span>
+          <button id="nextLevel" type="button" aria-label="Next level">&rsaquo;</button>
+        </div>
+      </header>
+
+      <div class="board-wrap">
+        <canvas id="confetti" aria-hidden="true"></canvas>
+        <div id="board" class="board" role="grid" aria-label="Puzzle grid"></div>
+      </div>
+
+      <div class="action-row">
+        <button id="stepBtn" type="button">Grow</button>
+        <button id="runBtn" type="button">Run</button>
+        <button id="hintBtn" type="button">Hint</button>
+        <button id="undoBtn" type="button">Undo</button>
+        <button id="resetBtn" type="button">Reset</button>
+        <button id="audioBtn" type="button">Audio</button>
+      </div>
+      <audio id="musicTrack" src="assets/quiet-time-david-fesliyan.mp3" loop preload="auto"></audio>
+    </section>
+
+    <aside class="side-panel" aria-label="Puzzle information">
+      <div class="reward-box" id="rewardBox">
+        <div class="reward-icon" aria-hidden="true">&#10022;</div>
+        <div>
+          <p class="label">Reward</p>
+          <p id="rewardText">Wake the moonflower.</p>
+        </div>
+      </div>
+
+      <dl class="stats">
+        <div>
+          <dt>Seeds left</dt>
+          <dd id="seedCount">0</dd>
+        </div>
+        <div>
+          <dt>Turns</dt>
+          <dd id="turnCount">0</dd>
+        </div>
+        <div>
+          <dt>Rule</dt>
+          <dd id="ruleName">Sprout</dd>
+        </div>
+      </dl>
+
+      <section class="panel-section">
+        <h2>Goal</h2>
+        <p id="goalText"></p>
+      </section>
+
+      <section class="panel-section">
+        <h2>Rule Almanac</h2>
+        <ol id="rulePreviewList" class="rule-preview"></ol>
+      </section>
+
+      <section class="panel-section compact">
+        <h2>Legend</h2>
+        <ul class="legend">
+          <li><span class="swatch paintable"></span> plantable patch</li>
+          <li><span class="swatch alive"></span> living sprout</li>
+          <li><span class="swatch solution-hint"></span> hinted solution</li>
+          <li><span class="swatch target"></span> reward tile</li>
+          <li><span class="swatch rock"></span> old stone</li>
+          <li><span class="swatch moving-rock"></span> moving stone</li>
+          <li><span class="swatch neighbor">1</span> living neighbors</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <div id="ruleModal" class="rule-modal" role="dialog" aria-modal="true" aria-labelledby="ruleModalTitle">
+    <div class="rule-modal-card">
+      <p class="eyebrow">Growth Charm</p>
+      <h2 id="ruleModalTitle">Rule preview</h2>
+      <p id="ruleText"></p>
+      <div id="ruleAnimation" class="rule-animation" aria-label="Animated rule example"></div>
+      <p id="ruleModalNote" class="rule-modal-note"></p>
+      <button id="startLevelBtn" type="button">Start Level</button>
+    </div>
+  </div>
+
+  <div id="completionModal" class="completion-modal" role="dialog" aria-modal="true" aria-labelledby="completionTitle" hidden>
+    <div class="completion-card">
+      <p class="eyebrow">Charm Complete</p>
+      <h2 id="completionTitle">Level complete</h2>
+      <p id="completionReward" class="completion-reward"></p>
+      <div id="completionPattern" class="completion-pattern" aria-label="Final growth pattern"></div>
+      <p id="completionStats" class="completion-stats"></p>
+      <div class="completion-actions">
+        <button id="completionReplayBtn" type="button">Replay</button>
+        <button id="completionNextBtn" type="button">Next Level</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="audioModal" class="audio-modal" role="dialog" aria-modal="true" aria-labelledby="audioTitle" hidden>
+    <div class="audio-card">
+      <p class="eyebrow">Audio</p>
+      <h2 id="audioTitle">Garden sound</h2>
+      <div class="audio-control">
+        <button id="soundToggleBtn" type="button">Sound On</button>
+        <label for="soundVolume">Effects volume</label>
+        <input id="soundVolume" type="range" min="0" max="100" value="70">
+      </div>
+      <div class="audio-control">
+        <button id="musicToggleBtn" type="button">Music Off</button>
+        <label for="musicVolume">Music volume</label>
+        <input id="musicVolume" type="range" min="0" max="100" value="45">
+      </div>
+      <button id="audioCloseBtn" type="button">Done</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

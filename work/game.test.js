@@ -820,6 +820,28 @@ test("editor clear removes board marks but keeps metadata", () => {
   assert.strictEqual(level.paintable.length, 0);
 });
 
+test("editor prevents patch and reward from sharing a tile", () => {
+  const context = loadGame();
+  context.__openEditor(true);
+
+  context.__setEditorMode("target");
+  context.__toggleEditorCell(2, 2);
+  context.__setEditorMode("paintable");
+  context.__toggleEditorCell(2, 2);
+  let level = context.__buildEditorLevel();
+  assert.strictEqual(JSON.stringify(level.paintable), JSON.stringify([[2, 2]]));
+  assert.strictEqual(level.targets.length, 0, "placing patch should remove reward from that tile");
+
+  context.__setEditorMode("solution");
+  context.__toggleEditorCell(2, 2);
+  context.__setEditorMode("target");
+  context.__toggleEditorCell(2, 2);
+  level = context.__buildEditorLevel();
+  assert.strictEqual(JSON.stringify(level.targets), JSON.stringify([[2, 2]]));
+  assert.strictEqual(level.paintable.length, 0, "placing reward should remove patch from that tile");
+  assert.strictEqual(level.solution.length, 0, "placing reward should remove solution seed from that tile");
+});
+
 test("debug controls are grouped with shortcut hints", () => {
   assert.match(html, /class="debug-controls"/);
   assert.match(html, /aria-label="Debug controls"/);

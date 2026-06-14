@@ -630,9 +630,19 @@ function toggleEditorCell(x, y) {
     editorState.solution.delete(cellKey);
   } else if (editorState.mode === "paintable") {
     toggleEditorSet(editorState.paintable, cellKey);
-    if (!editorState.paintable.has(cellKey)) editorState.solution.delete(cellKey);
+    if (editorState.paintable.has(cellKey)) {
+      editorState.targets.delete(cellKey);
+      editorState.rocks.delete(cellKey);
+    } else {
+      editorState.solution.delete(cellKey);
+    }
   } else if (editorState.mode === "target") {
     toggleEditorSet(editorState.targets, cellKey);
+    if (editorState.targets.has(cellKey)) {
+      editorState.paintable.delete(cellKey);
+      editorState.solution.delete(cellKey);
+      editorState.rocks.delete(cellKey);
+    }
   } else if (editorState.mode === "rock") {
     toggleEditorSet(editorState.rocks, cellKey);
     if (editorState.rocks.has(cellKey)) {

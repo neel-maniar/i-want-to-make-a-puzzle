@@ -893,14 +893,34 @@ dd {
 
 .rule-animation {
   display: grid;
-  gap: 6px;
-  width: min(300px, 78vw);
-  aspect-ratio: 1;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: min(460px, 86vw);
   margin: 18px auto 0;
   padding: 10px;
   border: 2px solid var(--line);
   border-radius: 8px;
   background: #fff7df;
+}
+
+.rule-step {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rule-step-label {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.rule-step-grid {
+  display: grid;
+  gap: 3px;
+  aspect-ratio: 1;
 }
 
 .rule-animation-cell {
@@ -931,8 +951,33 @@ dd {
   animation: ruleAfter 2.4s ease-in-out infinite;
 }
 
+.rule-step-cell.before-alive::before,
+.rule-step-cell.after-alive::after {
+  opacity: 1;
+  animation: none;
+}
+
 .rule-animation-cell.will-change {
   box-shadow: inset 0 0 0 2px rgba(204, 79, 115, .25);
+  animation: ruleCellPulse 1.8s ease-in-out infinite;
+}
+
+.rule-neighbor-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  border: 1px solid rgba(38, 49, 45, .2);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(255, 250, 240, .92);
+  font-size: clamp(.48rem, 1.1vw, .72rem);
+  font-weight: 900;
+  transform: translate(-50%, -50%);
 }
 
 @keyframes pulse {
@@ -969,6 +1014,11 @@ dd {
 @keyframes ruleAfter {
   0%, 48% { opacity: 0; transform: scale(.62); }
   62%, 100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ruleCellPulse {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(204, 79, 115, .18); }
+  50% { box-shadow: inset 0 0 0 3px rgba(204, 79, 115, .38); }
 }
 
 @media (max-width: 860px) {

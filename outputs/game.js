@@ -849,34 +849,77 @@ function renderRuleExample(rule) {
     ruleModalTitle.textContent = `${rule} progression`;
     ruleText.textContent = level.ruleText;
     ruleModalNote.textContent = "This custom charm follows the survival and birth counts from the level editor.";
-    ruleAnimation.style.gridTemplateColumns = "repeat(3, 1fr)";
-    ["...", ".#.", "..."].forEach((row, y) => {
-      [...row].forEach((value, x) => {
-        const cell = document.createElement("i");
-        cell.className = "rule-animation-cell";
-        cell.classList.toggle("before-alive", value === "#");
-        cell.classList.toggle("after-alive", level.update(level, new Set(["1,1"]), x, y));
-        cell.classList.toggle("will-change", value === "#" !== cell.classList.contains("after-alive"));
-        ruleAnimation.appendChild(cell);
-      });
-    });
+    renderRuleWalkthrough(["...", ".#.", "..."], level);
     return;
   }
 
   ruleModalTitle.textContent = example.title;
   ruleText.textContent = levels.find((level) => level.rule === rule).ruleText;
   ruleModalNote.textContent = example.note;
-  ruleAnimation.style.gridTemplateColumns = `repeat(${example.before[0].length}, 1fr)`;
-  example.before.forEach((row, y) => {
-    [...row].forEach((beforeValue, x) => {
-      const afterValue = example.after[y][x];
-      const cell = document.createElement("i");
-      cell.className = "rule-animation-cell";
-      cell.classList.toggle("before-alive", beforeValue === "#");
-      cell.classList.toggle("after-alive", afterValue === "#");
-      cell.classList.toggle("will-change", beforeValue !== afterValue);
-      ruleAnimation.appendChild(cell);
+  renderRuleWalkthrough(example.before, levels.find((level) => level.rule === rule));
+}
+
+function sourceFromPattern(pattern) {
+  const source = new Set();
+  pattern.forEach((row, y) => {
+    [...row].forEach((value, x) => {
+      if (value === "#") source.add(key(x, y));
     });
+  });
+  return source;
+}
+
+function patternAfterStep(pattern, level) {
+  const source = sourceFromPattern(pattern);
+  return pattern.map((row, y) =>
+    [...row].map((_, x) => level.update(level, source, x, y) ? "#" : ".").join("")
+  );
+}
+
+function renderRuleWalkthrough(beforePattern, level) {
+  const afterPattern = patternAfterStep(beforePattern, level);
+  const source = sourceFromPattern(beforePattern);
+  const steps = [
+    { label: "Start", mode: "before", pattern: beforePattern },
+    { label: "Count", mode: "count", pattern: beforePattern },
+    { label: "Next", mode: "after", pattern: afterPattern }
+  ];
+  ruleAnimation.style.gridTemplateColumns = `repeat(${steps.length}, 1fr)`;
+  steps.forEach((stepInfo) => {
+    const step = document.createElement("div");
+    step.className = "rule-step";
+    const label = document.createElement("span");
+    label.className = "rule-step-label";
+    label.textContent = stepInfo.label;
+    step.appendChild(label);
+
+    const grid = document.createElement("div");
+    grid.className = "rule-step-grid";
+    grid.style.gridTemplateColumns = `repeat(${beforePattern[0].length}, 1fr)`;
+    stepInfo.pattern.forEach((row, y) => {
+      [...row].forEach((value, x) => {
+        const beforeAlive = source.has(key(x, y));
+        const afterAlive = afterPattern[y][x] === "#";
+        const neighbors = neighborCount(level, source, x, y);
+        const cell = document.createElement("i");
+        cell.className = "rule-animation-cell";
+        cell.classList.toggle("rule-step-cell", true);
+        cell.classList.toggle("before-alive", stepInfo.mode !== "after" && beforeAlive);
+        cell.classList.toggle("after-alive", stepInfo.mode === "after" && afterAlive);
+        cell.classList.toggle("will-change", beforeAlive !== afterAlive);
+        cell.classList.toggle("count-step", stepInfo.mode === "count");
+        if (stepInfo.mode === "count") {
+          const count = document.createElement("span");
+          count.className = "rule-neighbor-count";
+          count.textContent = String(neighbors);
+          count.setAttribute("aria-hidden", "true");
+          cell.appendChild(count);
+        }
+        grid.appendChild(cell);
+      });
+    });
+    step.appendChild(grid);
+    ruleAnimation.appendChild(step);
   });
 }
 

@@ -187,6 +187,10 @@ function includesCell(cells, x, y) {
   return cells.some(([cx, cy]) => cx === x && cy === y);
 }
 
+function descendants(element) {
+  return element.children.flatMap((child) => [child, ...descendants(child)]);
+}
+
 function uniqueCells(cells) {
   return new Set(cells.map(([x, y]) => cellKey(x, y))).size;
 }
@@ -591,8 +595,16 @@ test("each ruleset opens the animated modal only the first time it appears", () 
   assert.strictEqual(modal.hidden, false, "modal should be visible on level load");
   assert.ok(animation.children.length > 0, "expected animated rule cells");
   assert.ok(
-    animation.children.some((cell) => cell.classList.contains("will-change")),
+    descendants(animation).some((cell) => cell.classList.contains("will-change")),
     "animation should mark cells that change under the rule"
+  );
+  assert.ok(
+    descendants(animation).some((cell) => cell.classList.contains("rule-step-cell")),
+    "rule modal should render multiple walkthrough steps"
+  );
+  assert.ok(
+    descendants(animation).some((cell) => cell.children.some((child) => child.className === "rule-neighbor-count")),
+    "rule modal should overlay neighbor counts between before and after"
   );
   assert.strictEqual(stepBtn.disabled, true, "play should wait until the rule modal is dismissed");
   assert.ok(context.__ruleExamples.Sprout.before.length > 0);
@@ -615,6 +627,24 @@ test("each ruleset opens the animated modal only the first time it appears", () 
 
   context.__resetLevel(4);
   assert.strictEqual(modal.hidden, true, "modal should stay hidden for repeated Life levels");
+});
+
+test("rule walkthrough neighbor counts match the shown live cells", () => {
+  const context = loadGame();
+  const animation = context.__elements.get("#ruleAnimation");
+  const countCells = descendants(animation).filter((cell) =>
+    cell.classList.contains("count-step") && cell.children.some((child) => child.className === "rule-neighbor-count")
+  );
+
+  assert.ok(countCells.length > 0, "expected count-step cells with neighbor overlays");
+  assert.ok(
+    countCells.some((cell) => cell.children.some((child) => child.textContent === "1")),
+    "Sprout example should show cells with one live neighbor"
+  );
+  assert.ok(
+    countCells.some((cell) => cell.children.some((child) => child.textContent === "0")),
+    "Sprout example should show cells with zero live neighbors"
+  );
 });
 
 test("tutorial shows onion-skin hints for cells that will grow next", () => {

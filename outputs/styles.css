@@ -347,31 +347,60 @@ h2 {
 
 .action-row {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: 72px 86px minmax(282px, 1fr) 82px 78px;
   gap: 10px;
+  align-items: stretch;
   margin-top: 16px;
 }
 
-.action-row button:nth-child(2) {
+.run-action {
   background: var(--berry);
   box-shadow: 0 4px 0 #963650;
 }
 
-.action-row button:nth-child(3) {
+.hint-action {
   color: var(--ink);
   background: var(--sky);
   box-shadow: 0 4px 0 #4d83a3;
 }
 
-.action-row button:nth-child(4),
-.action-row button:nth-child(5) {
+.debug-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(121, 92, 68, .24);
+  border-radius: 8px;
+  background: rgba(255, 247, 223, .68);
+}
+
+.debug-action {
   color: var(--ink);
   background: var(--gold);
   box-shadow: 0 4px 0 #a67220;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 6px;
+  align-items: center;
+  padding: .55rem .6rem;
+  text-align: left;
 }
 
-.action-row button:nth-child(6),
-.action-row button:nth-child(7) {
+.debug-action kbd {
+  grid-column: 2;
+  justify-self: start;
+  padding: .1rem .28rem;
+  border: 1px solid rgba(38, 49, 45, .22);
+  border-radius: 4px;
+  color: #46534d;
+  background: rgba(255, 250, 240, .8);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: .68rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.tool-action {
   color: var(--ink);
   background: #fff7df;
   border: 1px solid var(--line);
@@ -974,6 +1003,20 @@ dd {
   .action-row button {
     min-height: 44px;
     padding: .65rem .5rem;
+  }
+
+  .debug-controls {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+  }
+
+  .debug-action {
+    grid-template-columns: auto 1fr auto;
+    text-align: center;
+  }
+
+  .debug-action kbd {
+    grid-column: 3;
   }
 
   .editor-card {

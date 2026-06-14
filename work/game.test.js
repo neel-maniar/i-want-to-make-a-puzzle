@@ -88,6 +88,7 @@ function makeElement() {
 function loadGame(options = {}) {
   const elements = new Map();
   const audioStarts = [];
+  const windowListeners = {};
   function FakeAudioContext() {
     this.currentTime = 0;
     this.destination = {};
@@ -129,6 +130,9 @@ function loadGame(options = {}) {
       setInterval() {
         return 1;
       },
+      addEventListener(event, handler) {
+        windowListeners[event] = handler;
+      },
       AudioContext: options.audio ? FakeAudioContext : undefined,
       webkitAudioContext: undefined
     },
@@ -156,11 +160,12 @@ function loadGame(options = {}) {
   elements.set("#editorModes", editorModes);
   vm.createContext(context);
   vm.runInContext(
-    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound; globalThis.__openEditor = openEditor; globalThis.__closeEditor = closeEditor; globalThis.__setEditorMode = setEditorMode; globalThis.__toggleEditorCell = toggleEditorCell; globalThis.__syncEditorFromFields = syncEditorFromFields; globalThis.__buildEditorLevel = buildEditorLevel; globalThis.__editorState = editorState;`,
+    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound; globalThis.__openEditor = openEditor; globalThis.__closeEditor = closeEditor; globalThis.__setEditorMode = setEditorMode; globalThis.__toggleEditorCell = toggleEditorCell; globalThis.__syncEditorFromFields = syncEditorFromFields; globalThis.__buildEditorLevel = buildEditorLevel; globalThis.__editorState = editorState; globalThis.__handleShortcuts = handleShortcuts;`,
     context
   );
   context.__elements = elements;
   context.__audioStarts = audioStarts;
+  context.__windowListeners = windowListeners;
   return context;
 }
 
@@ -700,4 +705,34 @@ test("level editor paints cells and exports the level spec", () => {
   assert.strictEqual(JSON.stringify(level.solution), JSON.stringify([[1, 1]]));
   assert.strictEqual(level.update, context.__levels[2].update);
   assert.match(context.__elements.get("#editorExport").value, /targets: \[\[4, 1\], \[4, 2\]\]/);
+});
+
+test("debug controls are grouped with shortcut hints", () => {
+  assert.match(html, /class="debug-controls"/);
+  assert.match(html, /aria-label="Debug controls"/);
+  assert.match(html, /id="stepBtn"[\s\S]*<kbd>F10<\/kbd>/);
+  assert.match(html, /id="undoBtn"[\s\S]*<kbd>Ctrl Z<\/kbd>/);
+  assert.match(html, /id="resetBtn"[\s\S]*<kbd>Ctrl R<\/kbd>/);
+});
+
+test("debug keyboard shortcuts step undo and reset", () => {
+  const context = loadGame();
+  const level = context.__levels[0];
+  const keydown = context.__windowListeners.keydown;
+  assert.strictEqual(typeof keydown, "function", "expected keyboard shortcut handler");
+
+  context.__closeRuleModal();
+  context.__toggleCell(level.solution[0][0], level.solution[0][1]);
+  keydown({ key: "F10", ctrlKey: false, target: {}, preventDefault() {} });
+  assert.strictEqual(context.__elements.get("#turnCount").textContent, "1 / 3");
+
+  keydown({ key: "z", ctrlKey: true, target: {}, preventDefault() {} });
+  assert.strictEqual(context.__elements.get("#turnCount").textContent, "0 / 3");
+
+  context.__toggleCell(level.solution[0][0], level.solution[0][1]);
+  let prevented = false;
+  keydown({ key: "r", ctrlKey: true, target: {}, preventDefault() { prevented = true; } });
+  assert.strictEqual(prevented, true, "reset shortcut should prevent browser reload");
+  assert.strictEqual(context.__elements.get("#turnCount").textContent, "0 / 3");
+  assert.strictEqual(context.__elements.get("#board").children.some((cell) => cell.classList.contains("alive")), false);
 });

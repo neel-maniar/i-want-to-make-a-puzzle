@@ -393,6 +393,25 @@ function stopRun() {
   runTimer = null;
 }
 
+function isTextEntryTarget(target) {
+  if (!target || !target.tagName) return false;
+  return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+}
+
+function handleShortcuts(event) {
+  if (isTextEntryTarget(event.target) || audioModalOpen || editorModalOpen) return;
+  if (event.key === "F10") {
+    event.preventDefault();
+    step();
+  } else if (event.ctrlKey && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    undo();
+  } else if (event.ctrlKey && event.key.toLowerCase() === "r") {
+    event.preventDefault();
+    resetLevel();
+  }
+}
+
 function toggleSound() {
   soundEnabled = !soundEnabled;
   render();
@@ -937,5 +956,6 @@ nextLevel.addEventListener("click", () => resetLevel(levelIndex + 1));
 startLevelBtn.addEventListener("click", closeRuleModal);
 completionReplayBtn.addEventListener("click", replayCompletedLevel);
 completionNextBtn.addEventListener("click", goToNextLevel);
+window.addEventListener("keydown", handleShortcuts);
 
 resetLevel(0);

@@ -27,13 +27,27 @@
       </div>
 
       <div class="action-row">
-        <button id="stepBtn" type="button">Grow</button>
-        <button id="runBtn" type="button">Run</button>
-        <button id="hintBtn" type="button">Hint</button>
-        <button id="undoBtn" type="button">Undo</button>
-        <button id="resetBtn" type="button">Reset</button>
-        <button id="editorBtn" type="button">Editor</button>
-        <button id="audioBtn" type="button">Audio</button>
+        <button id="runBtn" class="run-action" type="button">Run</button>
+        <button id="hintBtn" class="hint-action" type="button">Hint</button>
+        <div class="debug-controls" aria-label="Debug controls">
+          <button id="stepBtn" class="debug-action" type="button" aria-label="Grow one step, F10">
+            <span aria-hidden="true">&rarr;</span>
+            <span>Grow</span>
+            <kbd>F10</kbd>
+          </button>
+          <button id="undoBtn" class="debug-action" type="button" aria-label="Undo, Control Z">
+            <span aria-hidden="true">&larr;</span>
+            <span>Undo</span>
+            <kbd>Ctrl Z</kbd>
+          </button>
+          <button id="resetBtn" class="debug-action" type="button" aria-label="Reset, Control R">
+            <span aria-hidden="true">&#8634;</span>
+            <span>Reset</span>
+            <kbd>Ctrl R</kbd>
+          </button>
+        </div>
+        <button id="editorBtn" class="tool-action" type="button">Editor</button>
+        <button id="audioBtn" class="tool-action" type="button">Audio</button>
       </div>
       <audio id="musicTrack" src="assets/quiet-time-david-fesliyan.mp3" loop preload="auto"></audio>
     </section>

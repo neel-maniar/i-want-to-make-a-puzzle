@@ -852,16 +852,16 @@ function renderRuleExample(rule) {
   ruleAnimation.innerHTML = "";
   if (!example) {
     const level = levels.find((candidate) => candidate.rule === rule) || currentLevel();
-    ruleModalTitle.textContent = `${rule} progression`;
+    ruleModalTitle.textContent = `"${rule}" Rule`;
     ruleText.textContent = level.ruleText;
     ruleModalNote.textContent = "This custom charm follows the survival and birth counts from the level editor.";
     renderRuleWalkthrough(["...", ".#.", "..."], level);
     return;
   }
 
-  ruleModalTitle.textContent = example.title;
+  ruleModalTitle.textContent = `"${rule}" Rule`;
   ruleText.textContent = levels.find((level) => level.rule === rule).ruleText;
-  ruleModalNote.textContent = example.note;
+  ruleModalNote.textContent = `${example.title}. ${example.note}`;
   renderRuleWalkthrough(example.before, levels.find((level) => level.rule === rule));
 }
 

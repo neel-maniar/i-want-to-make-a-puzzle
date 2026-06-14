@@ -605,6 +605,7 @@ test("each ruleset opens the animated modal only the first time it appears", () 
   const stepBtn = context.__elements.get("#stepBtn");
 
   assert.strictEqual(modal.hidden, false, "modal should be visible on level load");
+  assert.strictEqual(context.__elements.get("#ruleModalTitle").textContent, "\"Sprout\" Rule");
   assert.ok(animation.children.length > 0, "expected animated rule cells");
   assert.ok(
     descendants(animation).some((cell) => cell.classList.contains("will-change")),

@@ -40,6 +40,10 @@ function makeElement() {
       this.children.push(child);
       return child;
     },
+    querySelectorAll(selector) {
+      if (selector !== "button") return [];
+      return this.children.filter((child) => child.type === "button");
+    },
     addEventListener(event, handler) {
       this.listeners[event] = handler;
     },
@@ -134,14 +138,25 @@ function loadGame(options = {}) {
         if (!elements.has(selector)) elements.set(selector, makeElement());
         return elements.get(selector);
       },
+      querySelectorAll() {
+        return [];
+      },
       createElement() {
         return makeElement();
       }
     }
   };
+  const editorModes = elements.get("#editorModes") || makeElement();
+  ["paintable", "target", "rock", "solution", "erase"].forEach((mode) => {
+    const button = makeElement();
+    button.type = "button";
+    button.setAttribute("data-mode", mode);
+    editorModes.appendChild(button);
+  });
+  elements.set("#editorModes", editorModes);
   vm.createContext(context);
   vm.runInContext(
-    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound;`,
+    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound; globalThis.__openEditor = openEditor; globalThis.__closeEditor = closeEditor; globalThis.__setEditorMode = setEditorMode; globalThis.__toggleEditorCell = toggleEditorCell; globalThis.__syncEditorFromFields = syncEditorFromFields; globalThis.__buildEditorLevel = buildEditorLevel; globalThis.__editorState = editorState;`,
     context
   );
   context.__elements = elements;
@@ -632,4 +647,57 @@ test("hint button reveals one solution square at a time until the solution is ac
     0,
     "changing levels should clear revealed hints"
   );
+});
+
+test("level editor opens with the current level loaded", () => {
+  assert.match(html, /id="editorBtn"/);
+  assert.match(html, /id="editorModal"/);
+  assert.match(html, /id="editorBoard"/);
+  assert.match(html, /id="editorExport"/);
+  const context = loadGame();
+  const modal = context.__elements.get("#editorModal");
+  const board = context.__elements.get("#editorBoard");
+
+  context.__openEditor();
+
+  assert.strictEqual(modal.hidden, false);
+  assert.strictEqual(context.__elements.get("#editorName").value, context.__levels[0].title);
+  assert.strictEqual(board.children.length, context.__levels[0].size * context.__levels[0].size);
+  assert.match(context.__elements.get("#editorExport").value, /title: "Tutorial: First Sprouts"/);
+});
+
+test("level editor paints cells and exports the level spec", () => {
+  const context = loadGame();
+  context.__openEditor(true);
+  context.__elements.get("#editorName").value = "Test Grove";
+  context.__elements.get("#editorReward").value = "Ring a test bell.";
+  context.__elements.get("#editorGoal").value = "Reach both reward tiles.";
+  context.__elements.get("#editorSize").value = "6";
+  context.__elements.get("#editorSeeds").value = "2";
+  context.__elements.get("#editorTurns").value = "5";
+  context.__elements.get("#editorRule").value = "Pairing";
+  context.__syncEditorFromFields();
+
+  context.__setEditorMode("paintable");
+  context.__toggleEditorCell(1, 1);
+  context.__toggleEditorCell(2, 1);
+  context.__setEditorMode("target");
+  context.__toggleEditorCell(4, 1);
+  context.__toggleEditorCell(4, 2);
+  context.__setEditorMode("rock");
+  context.__toggleEditorCell(3, 3);
+  context.__setEditorMode("solution");
+  context.__toggleEditorCell(1, 1);
+
+  const level = context.__buildEditorLevel();
+  assert.strictEqual(level.title, "Test Grove");
+  assert.strictEqual(level.size, 6);
+  assert.strictEqual(level.seeds, 2);
+  assert.strictEqual(level.rule, "Pairing");
+  assert.strictEqual(JSON.stringify(level.paintable), JSON.stringify([[1, 1], [2, 1]]));
+  assert.strictEqual(JSON.stringify(level.targets), JSON.stringify([[4, 1], [4, 2]]));
+  assert.strictEqual(JSON.stringify(level.rocks), JSON.stringify([[3, 3]]));
+  assert.strictEqual(JSON.stringify(level.solution), JSON.stringify([[1, 1]]));
+  assert.strictEqual(level.update, context.__levels[2].update);
+  assert.match(context.__elements.get("#editorExport").value, /targets: \[\[4, 1\], \[4, 2\]\]/);
 });

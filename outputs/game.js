@@ -145,7 +145,22 @@ const runBtn = document.querySelector("#runBtn");
 const hintBtn = document.querySelector("#hintBtn");
 const undoBtn = document.querySelector("#undoBtn");
 const resetBtn = document.querySelector("#resetBtn");
+const editorBtn = document.querySelector("#editorBtn");
 const audioBtn = document.querySelector("#audioBtn");
+const editorModal = document.querySelector("#editorModal");
+const editorCloseBtn = document.querySelector("#editorCloseBtn");
+const editorLoadBtn = document.querySelector("#editorLoadBtn");
+const editorClearBtn = document.querySelector("#editorClearBtn");
+const editorBoard = document.querySelector("#editorBoard");
+const editorModes = document.querySelector("#editorModes");
+const editorName = document.querySelector("#editorName");
+const editorReward = document.querySelector("#editorReward");
+const editorGoal = document.querySelector("#editorGoal");
+const editorSize = document.querySelector("#editorSize");
+const editorSeeds = document.querySelector("#editorSeeds");
+const editorTurns = document.querySelector("#editorTurns");
+const editorRule = document.querySelector("#editorRule");
+const editorExport = document.querySelector("#editorExport");
 const audioModal = document.querySelector("#audioModal");
 const audioCloseBtn = document.querySelector("#audioCloseBtn");
 const soundToggleBtn = document.querySelector("#soundToggleBtn");
@@ -173,11 +188,13 @@ let completionOpen = false;
 let soundEnabled = true;
 let musicEnabled = false;
 let audioModalOpen = false;
+let editorModalOpen = false;
 let soundVolumeLevel = .7;
 let musicVolumeLevel = .45;
 let audioContext = null;
 let activeRule = null;
 const seenRules = new Set();
+let editorState = createBlankEditorState();
 
 function rect(x, y, width, height) {
   const cells = [];
@@ -408,6 +425,213 @@ function closeAudioModal() {
   render();
 }
 
+function ruleUpdate(rule) {
+  return { Sprout: sproutRule, Pairing: pairingRule, Life: lifeRule }[rule] || sproutRule;
+}
+
+function createBlankEditorState() {
+  return {
+    title: "New Grove",
+    reward: "Wake a tiny charm.",
+    goalText: "Paint cells, grow the charm, and reach every reward.",
+    size: 7,
+    seeds: 4,
+    maxTurns: 6,
+    rule: "Sprout",
+    mode: "paintable",
+    paintable: new Set(),
+    targets: new Set(),
+    rocks: new Set(),
+    solution: new Set()
+  };
+}
+
+function loadEditorFromLevel(level = currentLevel()) {
+  editorState = {
+    title: level.title,
+    reward: level.reward,
+    goalText: level.goalText,
+    size: level.size,
+    seeds: level.seeds,
+    maxTurns: level.maxTurns,
+    rule: level.rule,
+    mode: "paintable",
+    paintable: new Set(level.paintable.map(([x, y]) => key(x, y))),
+    targets: new Set(level.targets.map(([x, y]) => key(x, y))),
+    rocks: new Set((level.rocks || []).map(([x, y]) => key(x, y))),
+    solution: new Set((level.solution || []).map(([x, y]) => key(x, y)))
+  };
+  syncEditorFieldsFromState();
+}
+
+function syncEditorFieldsFromState() {
+  editorName.value = editorState.title;
+  editorReward.value = editorState.reward;
+  editorGoal.value = editorState.goalText;
+  editorSize.value = String(editorState.size);
+  editorSeeds.value = String(editorState.seeds);
+  editorTurns.value = String(editorState.maxTurns);
+  editorRule.value = editorState.rule;
+}
+
+function numberFromField(field, fallback, min, max) {
+  const value = Number(field.value);
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function trimEditorCells() {
+  ["paintable", "targets", "rocks", "solution"].forEach((name) => {
+    editorState[name] = new Set([...editorState[name]].filter((cellKey) => {
+      const [x, y] = parseKey(cellKey);
+      return x >= 0 && y >= 0 && x < editorState.size && y < editorState.size;
+    }));
+  });
+}
+
+function syncEditorFromFields() {
+  editorState.title = editorName.value.trim() || "New Grove";
+  editorState.reward = editorReward.value.trim() || "Wake a tiny charm.";
+  editorState.goalText = editorGoal.value.trim() || "Paint cells, grow the charm, and reach every reward.";
+  editorState.size = numberFromField(editorSize, editorState.size, 4, 16);
+  editorState.seeds = numberFromField(editorSeeds, editorState.seeds, 1, 16);
+  editorState.maxTurns = numberFromField(editorTurns, editorState.maxTurns, 1, 24);
+  editorState.rule = editorRule.value;
+  trimEditorCells();
+  renderEditor();
+}
+
+function setEditorMode(mode) {
+  editorState.mode = mode;
+  renderEditor();
+}
+
+function toggleEditorSet(set, cellKey) {
+  if (set.has(cellKey)) set.delete(cellKey);
+  else set.add(cellKey);
+}
+
+function toggleEditorCell(x, y) {
+  if (x < 0 || y < 0 || x >= editorState.size || y >= editorState.size) return;
+  const cellKey = key(x, y);
+  if (editorState.mode === "erase") {
+    editorState.paintable.delete(cellKey);
+    editorState.targets.delete(cellKey);
+    editorState.rocks.delete(cellKey);
+    editorState.solution.delete(cellKey);
+  } else if (editorState.mode === "paintable") {
+    toggleEditorSet(editorState.paintable, cellKey);
+    if (!editorState.paintable.has(cellKey)) editorState.solution.delete(cellKey);
+  } else if (editorState.mode === "target") {
+    toggleEditorSet(editorState.targets, cellKey);
+  } else if (editorState.mode === "rock") {
+    toggleEditorSet(editorState.rocks, cellKey);
+    if (editorState.rocks.has(cellKey)) {
+      editorState.paintable.delete(cellKey);
+      editorState.solution.delete(cellKey);
+      editorState.targets.delete(cellKey);
+    }
+  } else if (editorState.mode === "solution") {
+    editorState.paintable.add(cellKey);
+    toggleEditorSet(editorState.solution, cellKey);
+  }
+  renderEditor();
+}
+
+function sortedCells(set) {
+  return [...set].map(parseKey).sort(([ax, ay], [bx, by]) => ay - by || ax - bx);
+}
+
+function arraySource(cells) {
+  return `[${cells.map(([x, y]) => `[${x}, ${y}]`).join(", ")}]`;
+}
+
+function buildEditorLevel() {
+  return {
+    title: editorState.title,
+    reward: editorState.reward,
+    size: editorState.size,
+    seeds: editorState.seeds,
+    maxTurns: editorState.maxTurns,
+    rule: editorState.rule,
+    ruleText: (levels.find((level) => level.rule === editorState.rule) || levels[0]).ruleText,
+    goalText: editorState.goalText,
+    paintable: sortedCells(editorState.paintable),
+    targets: sortedCells(editorState.targets),
+    rocks: sortedCells(editorState.rocks),
+    solution: sortedCells(editorState.solution),
+    update: ruleUpdate(editorState.rule)
+  };
+}
+
+function editorExportText() {
+  const level = buildEditorLevel();
+  return `{
+  title: ${JSON.stringify(level.title)},
+  reward: ${JSON.stringify(level.reward)},
+  size: ${level.size},
+  seeds: ${level.seeds},
+  maxTurns: ${level.maxTurns},
+  rule: ${JSON.stringify(level.rule)},
+  ruleText: ${JSON.stringify(level.ruleText)},
+  goalText: ${JSON.stringify(level.goalText)},
+  paintable: ${arraySource(level.paintable)},
+  targets: ${arraySource(level.targets)},
+  rocks: ${arraySource(level.rocks)},
+  solution: ${arraySource(level.solution)},
+  update: ${level.rule.toLowerCase()}Rule
+}`;
+}
+
+function openEditor(blank = false) {
+  editorModalOpen = true;
+  if (blank) {
+    editorState = createBlankEditorState();
+    syncEditorFieldsFromState();
+  } else {
+    loadEditorFromLevel();
+  }
+  render();
+}
+
+function closeEditor() {
+  editorModalOpen = false;
+  render();
+}
+
+function clearEditor() {
+  editorState = createBlankEditorState();
+  syncEditorFieldsFromState();
+  renderEditor();
+}
+
+function renderEditor() {
+  editorModal.hidden = !editorModalOpen;
+  if (!editorModalOpen) return;
+  editorExport.value = editorExportText();
+  editorBoard.style.gridTemplateColumns = `repeat(${editorState.size}, 1fr)`;
+  editorBoard.innerHTML = "";
+  for (let y = 0; y < editorState.size; y += 1) {
+    for (let x = 0; x < editorState.size; x += 1) {
+      const cellKey = key(x, y);
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "editor-cell";
+      if (editorState.paintable.has(cellKey)) cell.className += " paintable";
+      if (editorState.targets.has(cellKey)) cell.className += " target";
+      if (editorState.rocks.has(cellKey)) cell.className += " rock";
+      if (editorState.solution.has(cellKey)) cell.className += " solution";
+      cell.setAttribute("role", "gridcell");
+      cell.setAttribute("aria-label", `editor row ${y + 1}, column ${x + 1}`);
+      cell.addEventListener("click", () => toggleEditorCell(x, y));
+      editorBoard.appendChild(cell);
+    }
+  }
+  editorModes.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("current", button.getAttribute("data-mode") === editorState.mode);
+  });
+}
+
 function updateSoundVolume() {
   soundVolumeLevel = Number(soundVolume.value) / 100;
 }
@@ -572,6 +796,7 @@ function render() {
   hintBtn.textContent = revealedHints.size >= level.solution.length ? "Hinted" : `Hint ${revealedHints.size}/${level.solution.length}`;
   undoBtn.disabled = history.length === 0;
   audioModal.hidden = !audioModalOpen;
+  editorModal.hidden = !editorModalOpen;
   soundToggleBtn.textContent = soundEnabled ? "Sound On" : "Sound Off";
   musicToggleBtn.textContent = musicEnabled ? "Music On" : "Music Off";
   soundVolume.value = String(Math.round(soundVolumeLevel * 100));
@@ -580,6 +805,7 @@ function render() {
   renderRuleExample(activeRule || level.rule);
   renderRulePreview();
   renderCompletion(level);
+  renderEditor();
 
   const hints = onionSkinHints(level);
   const currentRocks = rockSetAt(level, turns);
@@ -686,7 +912,21 @@ runBtn.addEventListener("click", toggleRun);
 hintBtn.addEventListener("click", revealHint);
 undoBtn.addEventListener("click", undo);
 resetBtn.addEventListener("click", () => resetLevel());
+editorBtn.addEventListener("click", () => openEditor());
 audioBtn.addEventListener("click", openAudioModal);
+editorCloseBtn.addEventListener("click", closeEditor);
+editorLoadBtn.addEventListener("click", () => openEditor());
+editorClearBtn.addEventListener("click", clearEditor);
+editorName.addEventListener("input", syncEditorFromFields);
+editorReward.addEventListener("input", syncEditorFromFields);
+editorGoal.addEventListener("input", syncEditorFromFields);
+editorSize.addEventListener("input", syncEditorFromFields);
+editorSeeds.addEventListener("input", syncEditorFromFields);
+editorTurns.addEventListener("input", syncEditorFromFields);
+editorRule.addEventListener("input", syncEditorFromFields);
+editorModes.querySelectorAll("button").forEach((button) => {
+  button.addEventListener("click", () => setEditorMode(button.getAttribute("data-mode")));
+});
 audioCloseBtn.addEventListener("click", closeAudioModal);
 soundToggleBtn.addEventListener("click", toggleSound);
 musicToggleBtn.addEventListener("click", toggleMusic);

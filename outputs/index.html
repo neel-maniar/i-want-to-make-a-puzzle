@@ -32,6 +32,7 @@
         <button id="hintBtn" type="button">Hint</button>
         <button id="undoBtn" type="button">Undo</button>
         <button id="resetBtn" type="button">Reset</button>
+        <button id="editorBtn" type="button">Editor</button>
         <button id="audioBtn" type="button">Audio</button>
       </div>
       <audio id="musicTrack" src="assets/quiet-time-david-fesliyan.mp3" loop preload="auto"></audio>
@@ -126,6 +127,58 @@
         <input id="musicVolume" type="range" min="0" max="100" value="45">
       </div>
       <button id="audioCloseBtn" type="button">Done</button>
+    </div>
+  </div>
+
+  <div id="editorModal" class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle" hidden>
+    <div class="editor-card">
+      <div class="editor-header">
+        <div>
+          <p class="eyebrow">Level Editor</p>
+          <h2 id="editorTitle">Garden sketchbook</h2>
+        </div>
+        <button id="editorCloseBtn" type="button">Done</button>
+      </div>
+
+      <div class="editor-layout">
+        <div class="editor-fields">
+          <label for="editorName">Title</label>
+          <input id="editorName" type="text" value="New Grove">
+          <label for="editorReward">Reward</label>
+          <input id="editorReward" type="text" value="Wake a tiny charm.">
+          <label for="editorGoal">Goal</label>
+          <textarea id="editorGoal" rows="3">Paint cells, grow the charm, and reach every reward.</textarea>
+          <div class="editor-number-row">
+            <label for="editorSize">Size<input id="editorSize" type="number" min="4" max="16" value="7"></label>
+            <label for="editorSeeds">Seeds<input id="editorSeeds" type="number" min="1" max="16" value="4"></label>
+            <label for="editorTurns">Turns<input id="editorTurns" type="number" min="1" max="24" value="6"></label>
+          </div>
+          <label for="editorRule">Rule</label>
+          <select id="editorRule">
+            <option value="Sprout">Sprout</option>
+            <option value="Pairing">Pairing</option>
+            <option value="Life">Life</option>
+          </select>
+          <div class="editor-actions">
+            <button id="editorLoadBtn" type="button">Load Current</button>
+            <button id="editorClearBtn" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div>
+          <div id="editorModes" class="editor-modes" aria-label="Editor tools">
+            <button type="button" data-mode="paintable">Patch</button>
+            <button type="button" data-mode="target">Reward</button>
+            <button type="button" data-mode="rock">Stone</button>
+            <button type="button" data-mode="solution">Solution</button>
+            <button type="button" data-mode="erase">Erase</button>
+          </div>
+          <div id="editorBoard" class="editor-board" role="grid" aria-label="Level editor grid"></div>
+        </div>
+      </div>
+
+      <label for="editorExport">Export</label>
+      <textarea id="editorExport" class="editor-export" rows="8" readonly></textarea>
     </div>
   </div>
 

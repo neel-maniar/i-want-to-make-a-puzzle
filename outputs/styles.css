@@ -347,7 +347,7 @@ h2 {
 
 .action-row {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 10px;
   margin-top: 16px;
 }
@@ -370,7 +370,8 @@ h2 {
   box-shadow: 0 4px 0 #a67220;
 }
 
-.action-row button:nth-child(6) {
+.action-row button:nth-child(6),
+.action-row button:nth-child(7) {
   color: var(--ink);
   background: #fff7df;
   border: 1px solid var(--line);
@@ -541,12 +542,14 @@ dd {
 
 .rule-modal[hidden],
 .completion-modal[hidden],
-.audio-modal[hidden] {
+.audio-modal[hidden],
+.editor-modal[hidden] {
   display: none;
 }
 
 .completion-modal,
-.audio-modal {
+.audio-modal,
+.editor-modal {
   position: fixed;
   inset: 0;
   z-index: 30;
@@ -586,12 +589,160 @@ dd {
   box-shadow: 0 24px 70px rgba(38, 49, 45, .34);
 }
 
+.editor-card {
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 22px;
+  overflow: auto;
+  border: 3px solid #795c44;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px rgba(38, 49, 45, .34);
+}
+
 .rule-modal-card h2,
 .completion-card h2,
-.audio-card h2 {
+.audio-card h2,
+.editor-card h2 {
   margin: 0 0 8px;
   font-size: clamp(1.35rem, 5vw, 2.2rem);
   line-height: 1.05;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.editor-header button {
+  min-width: 96px;
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.editor-fields {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-fields label,
+.editor-card > label {
+  color: #46534d;
+  font-size: .82rem;
+  font-weight: 900;
+}
+
+.editor-fields input,
+.editor-fields textarea,
+.editor-fields select,
+.editor-export {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: .62rem .7rem;
+  color: var(--ink);
+  background: #fffdf6;
+  font: inherit;
+}
+
+.editor-number-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.editor-number-row label {
+  display: grid;
+  gap: 4px;
+}
+
+.editor-actions,
+.editor-modes {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-actions {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 4px;
+}
+
+.editor-modes {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.editor-modes button {
+  padding: .58rem .55rem;
+  color: var(--ink);
+  background: #fff7df;
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.editor-modes button.current {
+  color: #fff;
+  background: var(--berry);
+}
+
+.editor-board {
+  display: grid;
+  gap: 4px;
+  aspect-ratio: 1;
+  width: min(100%, 440px);
+  padding: 8px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.editor-cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(121, 92, 68, .24);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .58);
+  box-shadow: none;
+}
+
+.editor-cell.paintable {
+  background: #dbeabf;
+}
+
+.editor-cell.target {
+  background: radial-gradient(circle, #fff1a4 0 22%, #e4ab3d 23% 45%, #b86d55 46%);
+}
+
+.editor-cell.rock {
+  background: linear-gradient(135deg, #a6a89d, #72776e);
+}
+
+.editor-cell.solution::after {
+  content: "";
+  position: absolute;
+  inset: 28%;
+  border-radius: 50%;
+  background: var(--berry);
+  box-shadow: 0 0 0 4px rgba(255, 250, 240, .68);
+}
+
+.editor-export {
+  min-height: 150px;
+  margin-top: 8px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: .82rem;
+  line-height: 1.35;
+  resize: vertical;
 }
 
 .rule-modal-card button {
@@ -786,6 +937,15 @@ dd {
   .board-wrap {
     width: min(94vw, 620px);
   }
+
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-board {
+    width: min(100%, 520px);
+    margin: 0 auto;
+  }
 }
 
 @media (max-width: 520px) {
@@ -814,5 +974,22 @@ dd {
   .action-row button {
     min-height: 44px;
     padding: .65rem .5rem;
+  }
+
+  .editor-card {
+    padding: 14px;
+  }
+
+  .editor-header {
+    display: grid;
+  }
+
+  .editor-header button {
+    width: 100%;
+  }
+
+  .editor-number-row,
+  .editor-modes {
+    grid-template-columns: 1fr 1fr;
   }
 }

@@ -93,6 +93,24 @@ const levels = [
     ],
     solution: [[2, 2], [3, 3], [1, 4], [2, 4], [3, 4], [13, 2], [12, 3], [14, 4], [13, 4], [12, 4]],
     update: lifeRule
+  },
+  {
+    title: "Sandbox Grove",
+    reward: "Test your own charm.",
+    size: 8,
+    seeds: 5,
+    maxTurns: 8,
+    rule: "Sandbox Sprout",
+    ruleText: "Custom rule: living cells survive with 0, 1, or 2 neighbors; empty cells bloom with exactly 1 neighbor.",
+    goalText: "Build your own level. Open the editor, change the board, name the rule, and press Done to play it.",
+    paintable: rect(0, 2, 3, 3),
+    targets: [[4, 2]],
+    rocks: [],
+    solution: [[2, 3]],
+    surviveCounts: [0, 1, 2],
+    birthCounts: [1],
+    sandbox: true,
+    update: customRule
   }
 ];
 
@@ -160,6 +178,9 @@ const editorSize = document.querySelector("#editorSize");
 const editorSeeds = document.querySelector("#editorSeeds");
 const editorTurns = document.querySelector("#editorTurns");
 const editorRule = document.querySelector("#editorRule");
+const editorRuleName = document.querySelector("#editorRuleName");
+const editorSurviveCounts = document.querySelector("#editorSurviveCounts");
+const editorBirthCounts = document.querySelector("#editorBirthCounts");
 const editorExport = document.querySelector("#editorExport");
 const audioModal = document.querySelector("#audioModal");
 const audioCloseBtn = document.querySelector("#audioCloseBtn");
@@ -269,6 +290,12 @@ function lifeRule(level, source, x, y) {
   const neighbors = neighborCount(level, source, x, y);
   if (source.has(key(x, y))) return neighbors === 2 || neighbors === 3;
   return neighbors === 3;
+}
+
+function customRule(level, source, x, y) {
+  const neighbors = neighborCount(level, source, x, y);
+  if (source.has(key(x, y))) return (level.surviveCounts || []).includes(neighbors);
+  return (level.birthCounts || []).includes(neighbors);
 }
 
 function resetLevel(index = levelIndex) {
@@ -462,7 +489,31 @@ function ruleUpdate(rule) {
   return { Sprout: sproutRule, Pairing: pairingRule, Life: lifeRule }[rule] || sproutRule;
 }
 
+function presetRuleCounts(rule) {
+  return {
+    Sprout: { survive: [0, 1, 2, 3, 4, 5, 6, 7, 8], birth: [1] },
+    Pairing: { survive: [1, 2], birth: [2] },
+    Life: { survive: [2, 3], birth: [3] }
+  }[rule] || { survive: [2, 3], birth: [3] };
+}
+
+function parseCounts(value, fallback) {
+  const counts = [...new Set(String(value).split(/[^0-8]+/).filter(Boolean).map(Number))]
+    .filter((count) => Number.isInteger(count) && count >= 0 && count <= 8)
+    .sort((a, b) => a - b);
+  return counts.length > 0 ? counts : fallback.slice();
+}
+
+function countsText(counts) {
+  return counts.join(", ");
+}
+
+function ruleTextFor(rule, surviveCounts, birthCounts) {
+  return `${rule}: living cells survive with ${countsText(surviveCounts) || "no"} neighbor${surviveCounts.length === 1 ? "" : "s"}; empty cells bloom with ${countsText(birthCounts) || "no"} neighbor${birthCounts.length === 1 ? "" : "s"}.`;
+}
+
 function createBlankEditorState() {
+  const counts = presetRuleCounts("Sprout");
   return {
     title: "New Grove",
     reward: "Wake a tiny charm.",
@@ -471,6 +522,9 @@ function createBlankEditorState() {
     seeds: 4,
     maxTurns: 6,
     rule: "Sprout",
+    presetRule: "Sprout",
+    surviveCounts: counts.survive.slice(),
+    birthCounts: counts.birth.slice(),
     mode: "paintable",
     paintable: new Set(),
     targets: new Set(),
@@ -480,6 +534,8 @@ function createBlankEditorState() {
 }
 
 function loadEditorFromLevel(level = currentLevel()) {
+  const preset = ["Sprout", "Pairing", "Life"].includes(level.rule) ? level.rule : "Life";
+  const counts = presetRuleCounts(preset);
   editorState = {
     title: level.title,
     reward: level.reward,
@@ -488,6 +544,9 @@ function loadEditorFromLevel(level = currentLevel()) {
     seeds: level.seeds,
     maxTurns: level.maxTurns,
     rule: level.rule,
+    presetRule: preset,
+    surviveCounts: (level.surviveCounts || counts.survive).slice(),
+    birthCounts: (level.birthCounts || counts.birth).slice(),
     mode: "paintable",
     paintable: new Set(level.paintable.map(([x, y]) => key(x, y))),
     targets: new Set(level.targets.map(([x, y]) => key(x, y))),
@@ -504,7 +563,10 @@ function syncEditorFieldsFromState() {
   editorSize.value = String(editorState.size);
   editorSeeds.value = String(editorState.seeds);
   editorTurns.value = String(editorState.maxTurns);
-  editorRule.value = editorState.rule;
+  editorRule.value = editorState.presetRule;
+  editorRuleName.value = editorState.rule;
+  editorSurviveCounts.value = countsText(editorState.surviveCounts);
+  editorBirthCounts.value = countsText(editorState.birthCounts);
 }
 
 function numberFromField(field, fallback, min, max) {
@@ -523,13 +585,27 @@ function trimEditorCells() {
 }
 
 function syncEditorFromFields() {
+  const previousPreset = editorState.presetRule;
   editorState.title = editorName.value.trim() || "New Grove";
   editorState.reward = editorReward.value.trim() || "Wake a tiny charm.";
   editorState.goalText = editorGoal.value.trim() || "Paint cells, grow the charm, and reach every reward.";
   editorState.size = numberFromField(editorSize, editorState.size, 4, 16);
   editorState.seeds = numberFromField(editorSeeds, editorState.seeds, 1, 16);
   editorState.maxTurns = numberFromField(editorTurns, editorState.maxTurns, 1, 24);
-  editorState.rule = editorRule.value;
+  editorState.presetRule = editorRule.value;
+  if (previousPreset !== editorState.presetRule && ["Sprout", "Pairing", "Life"].includes(editorState.rule)) {
+    const counts = presetRuleCounts(editorState.presetRule);
+    editorState.surviveCounts = counts.survive.slice();
+    editorState.birthCounts = counts.birth.slice();
+    editorSurviveCounts.value = countsText(editorState.surviveCounts);
+    editorBirthCounts.value = countsText(editorState.birthCounts);
+    editorRuleName.value = editorState.presetRule;
+  }
+  const ruleName = editorRuleName.value.trim();
+  editorState.rule = ruleName && !["Sprout", "Pairing", "Life"].includes(ruleName) ? ruleName : editorState.presetRule;
+  const presetCounts = presetRuleCounts(editorState.presetRule);
+  editorState.surviveCounts = parseCounts(editorSurviveCounts.value, presetCounts.survive);
+  editorState.birthCounts = parseCounts(editorBirthCounts.value, presetCounts.birth);
   trimEditorCells();
   renderEditor();
 }
@@ -579,7 +655,13 @@ function arraySource(cells) {
   return `[${cells.map(([x, y]) => `[${x}, ${y}]`).join(", ")}]`;
 }
 
+function numberArraySource(values) {
+  return `[${values.join(", ")}]`;
+}
+
 function buildEditorLevel() {
+  const presetUpdate = ruleUpdate(editorState.rule);
+  const usesPresetRule = ["Sprout", "Pairing", "Life"].includes(editorState.rule);
   return {
     title: editorState.title,
     reward: editorState.reward,
@@ -587,13 +669,18 @@ function buildEditorLevel() {
     seeds: editorState.seeds,
     maxTurns: editorState.maxTurns,
     rule: editorState.rule,
-    ruleText: (levels.find((level) => level.rule === editorState.rule) || levels[0]).ruleText,
+    ruleText: usesPresetRule
+      ? (levels.find((level) => level.rule === editorState.rule) || levels[0]).ruleText
+      : ruleTextFor(editorState.rule, editorState.surviveCounts, editorState.birthCounts),
     goalText: editorState.goalText,
     paintable: sortedCells(editorState.paintable),
     targets: sortedCells(editorState.targets),
     rocks: sortedCells(editorState.rocks),
     solution: sortedCells(editorState.solution),
-    update: ruleUpdate(editorState.rule)
+    surviveCounts: editorState.surviveCounts.slice(),
+    birthCounts: editorState.birthCounts.slice(),
+    sandbox: currentLevel().sandbox || undefined,
+    update: usesPresetRule ? presetUpdate : customRule
   };
 }
 
@@ -612,7 +699,9 @@ function editorExportText() {
   targets: ${arraySource(level.targets)},
   rocks: ${arraySource(level.rocks)},
   solution: ${arraySource(level.solution)},
-  update: ${level.rule.toLowerCase()}Rule
+  surviveCounts: ${numberArraySource(level.surviveCounts)},
+  birthCounts: ${numberArraySource(level.birthCounts)},
+  update: ${["Sprout", "Pairing", "Life"].includes(level.rule) ? `${level.rule.toLowerCase()}Rule` : "customRule"}
 }`;
 }
 
@@ -627,14 +716,24 @@ function openEditor(blank = false) {
   render();
 }
 
-function closeEditor() {
+function applyEditorToLevel() {
+  syncEditorFromFields();
+  const updatedLevel = buildEditorLevel();
+  levels[levelIndex] = updatedLevel;
+  seenRules.delete(updatedLevel.rule);
   editorModalOpen = false;
-  render();
+  resetLevel(levelIndex);
+}
+
+function closeEditor() {
+  applyEditorToLevel();
 }
 
 function clearEditor() {
-  editorState = createBlankEditorState();
-  syncEditorFieldsFromState();
+  editorState.paintable = new Set();
+  editorState.targets = new Set();
+  editorState.rocks = new Set();
+  editorState.solution = new Set();
   renderEditor();
 }
 
@@ -745,7 +844,24 @@ function renderRulePreview() {
 function renderRuleExample(rule) {
   const example = ruleExamples[rule];
   ruleAnimation.innerHTML = "";
-  if (!example) return;
+  if (!example) {
+    const level = levels.find((candidate) => candidate.rule === rule) || currentLevel();
+    ruleModalTitle.textContent = `${rule} progression`;
+    ruleText.textContent = level.ruleText;
+    ruleModalNote.textContent = "This custom charm follows the survival and birth counts from the level editor.";
+    ruleAnimation.style.gridTemplateColumns = "repeat(3, 1fr)";
+    ["...", ".#.", "..."].forEach((row, y) => {
+      [...row].forEach((value, x) => {
+        const cell = document.createElement("i");
+        cell.className = "rule-animation-cell";
+        cell.classList.toggle("before-alive", value === "#");
+        cell.classList.toggle("after-alive", level.update(level, new Set(["1,1"]), x, y));
+        cell.classList.toggle("will-change", value === "#" !== cell.classList.contains("after-alive"));
+        ruleAnimation.appendChild(cell);
+      });
+    });
+    return;
+  }
 
   ruleModalTitle.textContent = example.title;
   ruleText.textContent = levels.find((level) => level.rule === rule).ruleText;
@@ -957,6 +1073,9 @@ editorSize.addEventListener("input", syncEditorFromFields);
 editorSeeds.addEventListener("input", syncEditorFromFields);
 editorTurns.addEventListener("input", syncEditorFromFields);
 editorRule.addEventListener("input", syncEditorFromFields);
+editorRuleName.addEventListener("input", syncEditorFromFields);
+editorSurviveCounts.addEventListener("input", syncEditorFromFields);
+editorBirthCounts.addEventListener("input", syncEditorFromFields);
 editorModes.querySelectorAll("button").forEach((button) => {
   button.addEventListener("click", () => setEditorMode(button.getAttribute("data-mode")));
 });

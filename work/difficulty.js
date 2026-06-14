@@ -16,6 +16,9 @@ function makeElement() {
     appendChild(child) {
       this.children.push(child);
     },
+    querySelectorAll() {
+      return [];
+    },
     addEventListener() {},
     setAttribute() {},
     getContext() {
@@ -38,7 +41,7 @@ function loadLevels(root = path.resolve(__dirname, "..")) {
     Array,
     Math,
     Number,
-    window: { devicePixelRatio: 1, clearInterval() {}, setInterval() {} },
+    window: { devicePixelRatio: 1, clearInterval() {}, setInterval() {}, addEventListener() {} },
     requestAnimationFrame() {},
     document: { querySelector: makeElement, createElement: makeElement }
   };

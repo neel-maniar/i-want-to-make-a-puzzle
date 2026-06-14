@@ -160,7 +160,7 @@ function loadGame(options = {}) {
   elements.set("#editorModes", editorModes);
   vm.createContext(context);
   vm.runInContext(
-    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound; globalThis.__openEditor = openEditor; globalThis.__closeEditor = closeEditor; globalThis.__setEditorMode = setEditorMode; globalThis.__toggleEditorCell = toggleEditorCell; globalThis.__syncEditorFromFields = syncEditorFromFields; globalThis.__buildEditorLevel = buildEditorLevel; globalThis.__editorState = editorState; globalThis.__handleShortcuts = handleShortcuts;`,
+    `${gameSource}\n;globalThis.__levels = levels; globalThis.__ruleExamples = ruleExamples; globalThis.__render = render; globalThis.__toggleCell = toggleCell; globalThis.__revealHint = revealHint; globalThis.__resetLevel = resetLevel; globalThis.__closeRuleModal = closeRuleModal; globalThis.__openRuleModal = openRuleModal; globalThis.__step = step; globalThis.__playSound = playSound; globalThis.__openEditor = openEditor; globalThis.__closeEditor = closeEditor; globalThis.__applyEditorToLevel = applyEditorToLevel; globalThis.__setEditorMode = setEditorMode; globalThis.__toggleEditorCell = toggleEditorCell; globalThis.__syncEditorFromFields = syncEditorFromFields; globalThis.__buildEditorLevel = buildEditorLevel; globalThis.__editorState = editorState; globalThis.__handleShortcuts = handleShortcuts;`,
     context
   );
   context.__elements = elements;
@@ -303,7 +303,7 @@ test("first level is a small tutorial with the gentlest rule", () => {
 
 test("every level has a legal certified solution that reaches a reward", () => {
   const { __levels: levels } = loadGame();
-  levels.forEach((level) => {
+  levels.filter((level) => !level.sandbox).forEach((level) => {
     assert.ok(Array.isArray(level.solution), `${level.title} needs a certified solution`);
     assert.ok(level.solution.length > 0, `${level.title} solution cannot be empty`);
     assert.ok(level.solution.length <= level.seeds, `${level.title} solution uses too many seeds`);
@@ -319,6 +319,7 @@ test("every level has a legal certified solution that reaches a reward", () => {
 test("every certified solution wins through the public game loop", () => {
   const context = loadGame();
   context.__levels.forEach((level, index) => {
+    if (level.sandbox) return;
     context.__resetLevel(index);
     context.__closeRuleModal();
     level.solution.forEach(([x, y]) => context.__toggleCell(x, y));
@@ -492,8 +493,9 @@ test("audio settings modal plays the music track and adjusts its volume", () => 
 
 test("difficulty analyzer reports search space, wins, distance, and score", () => {
   const { __levels: levels } = loadGame();
-  const analyses = analyzeLevels(levels, { exactLimit: 5000, sampleSize: 1000 });
-  assert.strictEqual(analyses.length, levels.length);
+  const campaignLevels = levels.filter((level) => !level.sandbox);
+  const analyses = analyzeLevels(campaignLevels, { exactLimit: 5000, sampleSize: 1000 });
+  assert.strictEqual(analyses.length, campaignLevels.length);
   analyses.forEach((analysis) => {
     assert.ok(analysis.possibleTries >= analysis.winningTries, `${analysis.title} has impossible win counts`);
     assert.ok(analysis.winningTries > 0, `${analysis.title} should have at least one winning try`);
@@ -505,7 +507,7 @@ test("difficulty analyzer reports search space, wins, distance, and score", () =
 
 test("difficulty scores strictly increase by level order", () => {
   const { __levels: levels } = loadGame();
-  const analyses = analyzeLevels(levels, { exactLimit: 5000, sampleSize: 1000 });
+  const analyses = analyzeLevels(levels.filter((level) => !level.sandbox), { exactLimit: 5000, sampleSize: 1000 });
   for (let i = 1; i < analyses.length; i += 1) {
     assert.ok(
       analyses[i].score > analyses[i - 1].score,
@@ -529,13 +531,14 @@ test("difficulty math counts combinations and nearest reward distance", () => {
 
 test("later levels grow larger as the player progresses", () => {
   const { __levels: levels } = loadGame();
-  for (let i = 1; i < levels.length; i += 1) {
+  const campaignLevels = levels.filter((level) => !level.sandbox);
+  for (let i = 1; i < campaignLevels.length; i += 1) {
     assert.ok(
-      levels[i].size >= levels[i - 1].size,
-      `${levels[i].title} should not shrink from the previous level`
+      campaignLevels[i].size >= campaignLevels[i - 1].size,
+      `${campaignLevels[i].title} should not shrink from the previous level`
     );
   }
-  assert.ok(levels.at(-1).size >= 10, "the final level should be noticeably larger");
+  assert.ok(campaignLevels.at(-1).size >= 10, "the final campaign level should be noticeably larger");
 });
 
 test("one level requires planting in two disjoint plantation regions", () => {
@@ -705,6 +708,86 @@ test("level editor paints cells and exports the level spec", () => {
   assert.strictEqual(JSON.stringify(level.solution), JSON.stringify([[1, 1]]));
   assert.strictEqual(level.update, context.__levels[2].update);
   assert.match(context.__elements.get("#editorExport").value, /targets: \[\[4, 1\], \[4, 2\]\]/);
+});
+
+test("the final level is an editable sandbox", () => {
+  const { __levels: levels } = loadGame();
+  const sandbox = levels.at(-1);
+  assert.strictEqual(sandbox.sandbox, true);
+  assert.match(sandbox.title, /sandbox/i);
+  assert.ok(sandbox.size >= 6);
+  assert.ok(Array.isArray(sandbox.birthCounts));
+  assert.ok(Array.isArray(sandbox.surviveCounts));
+});
+
+test("pressing editor Done applies changes to the current level", () => {
+  const context = loadGame();
+  context.__resetLevel(context.__levels.length - 1);
+  context.__closeRuleModal();
+  context.__openEditor();
+  context.__elements.get("#editorName").value = "My Test Meadow";
+  context.__elements.get("#editorSize").value = "6";
+  context.__elements.get("#editorSeeds").value = "2";
+  context.__elements.get("#editorTurns").value = "4";
+  context.__elements.get("#editorRuleName").value = "Little Sparks";
+  context.__elements.get("#editorSurviveCounts").value = "1, 2";
+  context.__elements.get("#editorBirthCounts").value = "1";
+  context.__syncEditorFromFields();
+  context.__setEditorMode("paintable");
+  context.__toggleEditorCell(0, 0);
+  context.__setEditorMode("target");
+  context.__toggleEditorCell(1, 0);
+  context.__setEditorMode("solution");
+  context.__toggleEditorCell(0, 0);
+
+  context.__applyEditorToLevel();
+
+  const level = context.__levels.at(-1);
+  assert.strictEqual(level.title, "My Test Meadow");
+  assert.strictEqual(level.size, 6);
+  assert.strictEqual(level.rule, "Little Sparks");
+  assert.strictEqual(JSON.stringify(level.surviveCounts), JSON.stringify([1, 2]));
+  assert.strictEqual(JSON.stringify(level.birthCounts), JSON.stringify([1]));
+  assert.strictEqual(context.__elements.get("#levelTitle").textContent, "My Test Meadow");
+  assert.strictEqual(context.__elements.get("#board").children.length, 36);
+});
+
+test("custom progression rules use survival and birth neighbor counts", () => {
+  const context = loadGame();
+  context.__openEditor(true);
+  context.__elements.get("#editorRuleName").value = "Birth One";
+  context.__elements.get("#editorSurviveCounts").value = "1";
+  context.__elements.get("#editorBirthCounts").value = "1";
+  context.__syncEditorFromFields();
+  context.__setEditorMode("paintable");
+  context.__toggleEditorCell(0, 0);
+  context.__setEditorMode("target");
+  context.__toggleEditorCell(1, 0);
+  context.__setEditorMode("solution");
+  context.__toggleEditorCell(0, 0);
+  const level = context.__buildEditorLevel();
+  const alive = new Set(["0,0"]);
+
+  assert.strictEqual(level.update(level, alive, 0, 0), false, "living cell with zero neighbors should die");
+  assert.strictEqual(level.update(level, alive, 1, 0), true, "empty cell with one neighbor should be born");
+});
+
+test("editor clear removes board marks but keeps metadata", () => {
+  const context = loadGame();
+  context.__openEditor(true);
+  context.__elements.get("#editorName").value = "Keep Me";
+  context.__elements.get("#editorSize").value = "6";
+  context.__elements.get("#editorRuleName").value = "Keep Rule";
+  context.__syncEditorFromFields();
+  context.__setEditorMode("paintable");
+  context.__toggleEditorCell(0, 0);
+  context.__elements.get("#editorClearBtn").click();
+  const level = context.__buildEditorLevel();
+
+  assert.strictEqual(level.title, "Keep Me");
+  assert.strictEqual(level.size, 6);
+  assert.strictEqual(level.rule, "Keep Rule");
+  assert.strictEqual(level.paintable.length, 0);
 });
 
 test("debug controls are grouped with shortcut hints", () => {

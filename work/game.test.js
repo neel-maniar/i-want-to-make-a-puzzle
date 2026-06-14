@@ -394,6 +394,18 @@ test("growth steps mark new and fading cells for propagation animation", () => {
   );
 });
 
+test("living grass cells do not get flower variants", () => {
+  const context = loadGame();
+  context.__closeRuleModal();
+  context.__toggleCell(1, 2);
+  context.__step();
+  const board = context.__elements.get("#board");
+  assert.strictEqual(
+    board.children.some((cell) => cell.classList.contains("flower")),
+    false
+  );
+});
+
 test("cells show current neighbor counts after planting", () => {
   const context = loadGame();
   context.__closeRuleModal();

@@ -233,10 +233,6 @@ function parseKey(cellKey) {
   return cellKey.split(",").map(Number);
 }
 
-function flowerKind(x, y, turn) {
-  return ((x * 17 + y * 31 + turn * 7) % 11) === 0 ? "flower" : "";
-}
-
 function currentLevel() {
   return levels[levelIndex];
 }
@@ -1032,7 +1028,6 @@ function render() {
       cell.classList.toggle("moving-rock", isRock && !isStaticRock);
       cell.classList.toggle("next-rock", isNextRock);
       cell.classList.toggle("alive", alive.has(cellKey));
-      cell.classList.toggle("flower", alive.has(cellKey) && flowerKind(x, y, turns) === "flower");
       cell.classList.toggle("hint", hints.has(cellKey));
       cell.classList.toggle("solution-hint", revealedHints.has(cellKey) && !alive.has(cellKey));
       cell.classList.toggle("new-growth", newGrowth.has(cellKey));

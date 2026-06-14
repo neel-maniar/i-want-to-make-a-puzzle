@@ -214,13 +214,6 @@ h2 {
   transform: rotate(16deg);
 }
 
-.cell.alive.flower {
-  background:
-    radial-gradient(circle at 67% 24%, #fff1a4 0 7%, #cc4f73 8% 12%, transparent 13%),
-    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, .18) 10% 12%, transparent 12% 23%, rgba(36, 116, 83, .34) 23% 26%, transparent 26% 38%, rgba(255, 255, 255, .16) 38% 40%, transparent 40% 56%, rgba(36, 116, 83, .3) 56% 59%, transparent 59% 72%, rgba(255, 255, 255, .16) 72% 74%, transparent 74%),
-    linear-gradient(180deg, #7fcf75 0%, #3f9b6d 62%, #247453 100%);
-}
-
 .cell.new-growth {
   animation: grassRise 520ms cubic-bezier(.2, 1.55, .45, 1) both;
 }

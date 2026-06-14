@@ -146,6 +146,7 @@ const ruleName = document.querySelector("#ruleName");
 const goalText = document.querySelector("#goalText");
 const ruleText = document.querySelector("#ruleText");
 const ruleModal = document.querySelector("#ruleModal");
+const ruleModalEyebrow = document.querySelector("#ruleModalEyebrow");
 const ruleModalTitle = document.querySelector("#ruleModalTitle");
 const ruleAnimation = document.querySelector("#ruleAnimation");
 const ruleModalNote = document.querySelector("#ruleModalNote");
@@ -850,6 +851,7 @@ function renderRulePreview() {
 function renderRuleExample(rule) {
   const example = ruleExamples[rule];
   ruleAnimation.innerHTML = "";
+  ruleModalEyebrow.textContent = `${rule} Rule`;
   if (!example) {
     const level = levels.find((candidate) => candidate.rule === rule) || currentLevel();
     ruleModalTitle.textContent = `"${rule}" Rule`;

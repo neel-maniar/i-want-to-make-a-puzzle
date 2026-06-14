@@ -356,6 +356,11 @@ h2 {
 .run-action {
   background: var(--berry);
   box-shadow: 0 4px 0 #963650;
+  display: grid;
+  gap: 5px;
+  align-content: center;
+  justify-items: center;
+  padding: .55rem .6rem;
 }
 
 .hint-action {
@@ -386,6 +391,7 @@ h2 {
   text-align: left;
 }
 
+.run-action kbd,
 .debug-action kbd {
   grid-column: 2;
   justify-self: start;
@@ -398,6 +404,14 @@ h2 {
   font-size: .68rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.run-action kbd {
+  grid-column: auto;
+  justify-self: center;
+  color: #fff7df;
+  background: rgba(38, 49, 45, .18);
+  border-color: rgba(255, 250, 240, .28);
 }
 
 .tool-action {

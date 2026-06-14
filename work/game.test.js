@@ -710,9 +710,10 @@ test("level editor paints cells and exports the level spec", () => {
 test("debug controls are grouped with shortcut hints", () => {
   assert.match(html, /class="debug-controls"/);
   assert.match(html, /aria-label="Debug controls"/);
+  assert.match(html, /id="runBtn"[\s\S]*<kbd>F5<\/kbd>/);
   assert.match(html, /id="stepBtn"[\s\S]*<kbd>F10<\/kbd>/);
-  assert.match(html, /id="undoBtn"[\s\S]*<kbd>Ctrl Z<\/kbd>/);
-  assert.match(html, /id="resetBtn"[\s\S]*<kbd>Ctrl R<\/kbd>/);
+  assert.match(html, /id="undoBtn"[\s\S]*<kbd>F9<\/kbd>/);
+  assert.match(html, /id="resetBtn"[\s\S]*<kbd>F12<\/kbd>/);
 });
 
 test("debug keyboard shortcuts step undo and reset", () => {
@@ -723,15 +724,22 @@ test("debug keyboard shortcuts step undo and reset", () => {
 
   context.__closeRuleModal();
   context.__toggleCell(level.solution[0][0], level.solution[0][1]);
+  keydown({ key: "F5", ctrlKey: false, target: {}, preventDefault() {} });
+  assert.strictEqual(context.__elements.get("#runBtn").children[0].textContent, "Stop");
+  assert.strictEqual(context.__elements.get("#runBtn").children[1].textContent, "F5");
+  keydown({ key: "F5", ctrlKey: false, target: {}, preventDefault() {} });
+  assert.strictEqual(context.__elements.get("#runBtn").children[0].textContent, "Run");
+  assert.strictEqual(context.__elements.get("#runBtn").children[1].textContent, "F5");
+
   keydown({ key: "F10", ctrlKey: false, target: {}, preventDefault() {} });
   assert.strictEqual(context.__elements.get("#turnCount").textContent, "1 / 3");
 
-  keydown({ key: "z", ctrlKey: true, target: {}, preventDefault() {} });
+  keydown({ key: "F9", ctrlKey: false, target: {}, preventDefault() {} });
   assert.strictEqual(context.__elements.get("#turnCount").textContent, "0 / 3");
 
   context.__toggleCell(level.solution[0][0], level.solution[0][1]);
   let prevented = false;
-  keydown({ key: "r", ctrlKey: true, target: {}, preventDefault() { prevented = true; } });
+  keydown({ key: "F12", ctrlKey: false, target: {}, preventDefault() { prevented = true; } });
   assert.strictEqual(prevented, true, "reset shortcut should prevent browser reload");
   assert.strictEqual(context.__elements.get("#turnCount").textContent, "0 / 3");
   assert.strictEqual(context.__elements.get("#board").children.some((cell) => cell.classList.contains("alive")), false);

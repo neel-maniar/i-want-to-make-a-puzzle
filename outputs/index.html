@@ -27,7 +27,10 @@
       </div>
 
       <div class="action-row">
-        <button id="runBtn" class="run-action" type="button">Run</button>
+        <button id="runBtn" class="run-action" type="button" aria-label="Run or stop, F5">
+          <span>Run</span>
+          <kbd>F5</kbd>
+        </button>
         <button id="hintBtn" class="hint-action" type="button">Hint</button>
         <div class="debug-controls" aria-label="Debug controls">
           <button id="stepBtn" class="debug-action" type="button" aria-label="Grow one step, F10">
@@ -35,15 +38,15 @@
             <span>Grow</span>
             <kbd>F10</kbd>
           </button>
-          <button id="undoBtn" class="debug-action" type="button" aria-label="Undo, Control Z">
+          <button id="undoBtn" class="debug-action" type="button" aria-label="Undo, F9">
             <span aria-hidden="true">&larr;</span>
             <span>Undo</span>
-            <kbd>Ctrl Z</kbd>
+            <kbd>F9</kbd>
           </button>
-          <button id="resetBtn" class="debug-action" type="button" aria-label="Reset, Control R">
+          <button id="resetBtn" class="debug-action" type="button" aria-label="Reset, F12">
             <span aria-hidden="true">&#8634;</span>
             <span>Reset</span>
-            <kbd>Ctrl R</kbd>
+            <kbd>F12</kbd>
           </button>
         </div>
         <button id="editorBtn" class="tool-action" type="button">Editor</button>

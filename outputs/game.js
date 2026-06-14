@@ -375,7 +375,7 @@ function toggleRun() {
     return;
   }
   running = true;
-  runBtn.textContent = "Stop";
+  setRunButtonLabel("Stop");
   runTimer = window.setInterval(() => {
     const level = currentLevel();
     if (won || turns >= level.maxTurns || alive.size === 0) {
@@ -388,9 +388,20 @@ function toggleRun() {
 
 function stopRun() {
   running = false;
-  runBtn.textContent = "Run";
+  setRunButtonLabel("Run");
   if (runTimer) window.clearInterval(runTimer);
   runTimer = null;
+}
+
+function setRunButtonLabel(label) {
+  runBtn.innerHTML = "";
+  const text = document.createElement("span");
+  text.textContent = label;
+  const shortcut = document.createElement("kbd");
+  shortcut.textContent = "F5";
+  runBtn.appendChild(text);
+  runBtn.appendChild(shortcut);
+  runBtn.setAttribute("aria-label", `${label === "Run" ? "Run" : "Stop"}, F5`);
 }
 
 function isTextEntryTarget(target) {
@@ -400,13 +411,16 @@ function isTextEntryTarget(target) {
 
 function handleShortcuts(event) {
   if (isTextEntryTarget(event.target) || audioModalOpen || editorModalOpen) return;
-  if (event.key === "F10") {
+  if (event.key === "F5") {
+    event.preventDefault();
+    toggleRun();
+  } else if (event.key === "F10") {
     event.preventDefault();
     step();
-  } else if (event.ctrlKey && event.key.toLowerCase() === "z") {
+  } else if (event.key === "F9") {
     event.preventDefault();
     undo();
-  } else if (event.ctrlKey && event.key.toLowerCase() === "r") {
+  } else if (event.key === "F12") {
     event.preventDefault();
     resetLevel();
   }
